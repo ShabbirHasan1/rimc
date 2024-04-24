@@ -1,0 +1,25 @@
+[package]
+name = "rsimc"
+version = "0.1.0"
+edition = "2021"
+authors = [
+    "David Kalliecharan"
+]
+readme = "README.md"
+license = "BSD-2-Clause"
+
+repository = "https://github.com/definedata/rsimc"
+
+description = "A rust simulator for Monte Carlo systems"
+
+keywords = ["simulation", "math"]
+categories = ["algorithms", "science"]
+
+[lib]
+name = "rsimc"
+bench = false
+test = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
