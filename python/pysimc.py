@@ -7,12 +7,11 @@ import time
 
 
 class Ensemble:
-    arr: ndarray | None = None
     def __init__(self, dim: int, params: dict) -> None:
         self.dim = dim
-        self.arr = zeros((self.dim, self.dim))
+        self.arr: ndarray = zeros((self.dim, self.dim))
         self.params = params
-    
+
     def init_ensemble(self) -> None:
         if self.arr is None:
             raise TypeError("self.arr is None and not an numpy.ndarray")
@@ -24,7 +23,7 @@ class Ensemble:
         self.arr = arr_flat.reshape(self.dim, self.dim)
 
     def _calc_site_energy(self, i: int, j: int) -> float:
-        coupling_const = self.params['coupling_const']
+        coupling_const = self.params["coupling_const"]
 
         s_k = self.arr[i][j]
         site_energy = 0.0
@@ -43,7 +42,7 @@ class Ensemble:
 
         return site_energy
 
-    def _calc_site_energy_diff(self, i: int, j: int) -> None:
+    def _calc_site_energy_diff(self, i: int, j: int) -> float:
         site_energy_diff = self._calc_site_energy(i, j)
         site_energy_diff *= -2.0
 
@@ -59,7 +58,7 @@ class Ensemble:
         return state_energy
 
     def step(self) -> None:
-        beta = self.params['beta']
+        beta = self.params["beta"]
 
         nrows, ncols = self.arr.shape
 
@@ -68,7 +67,7 @@ class Ensemble:
         r = rand()
 
         accept_ratio = 0
-        exponent = self._calc_site_energy_diff(i, j)
+        exponent: float = self._calc_site_energy_diff(i, j)
 
         if exponent <= 0:
             accept_ratio = 1
@@ -78,7 +77,7 @@ class Ensemble:
 
         if r < accept_ratio:
             self._update_site(i, j)
-        
+
     def _update_site(self, i: int, j: int) -> None:
         spin = self.arr[i][j]
 
@@ -91,18 +90,19 @@ class Ensemble:
                 raise ValueError("Invalid value, cannot update state")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument("-d", "--dimension", type=int, default=10,
-                        help="Dimensions of the NxN ensemble")
+    parser.add_argument(
+        "-d", "--dimension", type=int, default=10, help="Dimensions of the NxN ensemble"
+    )
 
     args = parser.parse_args()
     dim = args.dimension
-    
+
     my_params = {
-        'coupling_const': 1.0,
-        'beta': 1.0,
-        'mag_field': 1.0,
+        "coupling_const": 1.0,
+        "beta": 1.0,
+        "mag_field": 1.0,
     }
 
     my_ensemble = Ensemble(dim, my_params)
