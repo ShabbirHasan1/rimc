@@ -11,7 +11,7 @@ struct Cli {
     dim: usize,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 struct Params {
     mag_field: f32,
     coupling_const: f32,
@@ -180,7 +180,7 @@ fn main() {
         coupling_const: 1.0,
     };
 
-    let mut my_ensemble = Ensemble::new(dim, my_params);
+    let mut my_ensemble = Ensemble::new(dim, my_params.clone());
 
     println!("Ensemble {} x {}\n{:#?}", dim, dim, my_ensemble);
 
@@ -201,4 +201,67 @@ fn main() {
     );
 
     write_state(&my_ensemble, "final.txt").unwrap();
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use approx::assert_relative_eq;
+
+    fn setup() -> Ensemble {
+        let params = Params {
+            coupling_const: 1.0,
+            mag_field: 0.0,
+            beta: 1.0,
+        };
+        let mut ensemble = Ensemble::new(4, params.clone());
+
+        // Force system state, i.e., set up array with alternating -1 and 1
+        for i in 0..4 {
+            for j in 0..4 {
+                if (i + j) % 2 == 0 {
+                    ensemble.arr[[i, j]] = 1;
+                } else {
+                    ensemble.arr[[i, j]] = -1;
+                }
+            }
+        }
+
+        ensemble
+    }
+
+    #[test]
+    fn test_site_energy() {
+        // Sum over +1 spin with 4 neighbouring spins that are -1
+        let ensemble = setup();
+        let s_k = ensemble.arr[[1, 1]] as f32;
+        let value = -ensemble.params.coupling_const * s_k * -4.0;
+
+        assert_relative_eq!(
+            ensemble.calc_site_energy(1, 1).unwrap(),
+            value,
+            epsilon = 1E-6
+        );
+    }
+
+    #[test]
+    fn test_site_energy_diff() {
+        let ensemble = setup();
+        let s_k = ensemble.arr[[1, 1]] as f32;
+        let value = -ensemble.params.coupling_const * s_k * -4.0 * -2.0;
+        assert_relative_eq!(
+            ensemble.calc_site_energy_diff(1, 1).unwrap(),
+            value,
+            epsilon = 1E-6
+        );
+    }
+
+    #[test]
+    fn test_state_energy() {
+        let ensemble = setup();
+        // Each site is -J * s_k * sum_i=0..4 s_i, which is
+        // -1.0 * -/+1.0 * +/-4.0 * 16.0 = 64
+        let value: f32 = 64.0;
+        assert_relative_eq!(ensemble.calc_state_energy().unwrap(), value, epsilon = 1E-6);
+    }
 }
